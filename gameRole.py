@@ -16,7 +16,7 @@ class Bullet(pygame.sprite.Sprite):
         self.image = bullet_img
         self.rect = self.image.get_rect()
         self.rect.midbottom = init_pos
-        self.speed = 10
+        self.speed = 8
 
     def move(self):
         self.rect.top -= self.speed
@@ -34,6 +34,12 @@ class Player(pygame.sprite.Sprite):
         self.bullets = pygame.sprite.Group()
         self.img_index = 0
         self.is_hit = False
+    def hit(self):
+        if not self.invincible:
+            # Nếu nhân vật không ở trạng thái bất tử
+            self.is_hit = True
+            self.invincible = True  # Đặt trạng thái bất tử
+            pygame.time.set_timer(USEREVENT + 1, 1000)  # Thiết lập thời gian bất tử là 1 giây
 
     def shoot(self, bullet_img):
         bullet = Bullet(bullet_img, self.rect.midtop)
@@ -70,7 +76,7 @@ class Enemy(pygame.sprite.Sprite):
        self.rect = self.image.get_rect()
        self.rect.topleft = init_pos
        self.down_imgs = enemy_down_imgs
-       self.speed = 2
+       self.speed = 3
        self.down_index = 0
 
     def move(self):

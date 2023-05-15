@@ -22,7 +22,6 @@ pygame.mixer.music.load('resources/sound/game_music1.mp3')
 pygame.mixer.music.play(-1, 0.0)
 pygame.mixer.music.set_volume(0.25)
 
-
 background = pygame.image.load('resources/image/background1.png').convert()
 game_over = pygame.image.load('resources/image/gameover.png')
 
@@ -66,10 +65,23 @@ enemy3_down_imgs.append(plane_img.subsurface(pygame.Rect(165, 486, 165, 261)))
 enemy3_down_imgs.append(plane_img.subsurface(pygame.Rect(673, 748, 166, 260)))
 enemy3_down_imgs.append(plane_img.subsurface(pygame.Rect(0, 747, 166, 261)))
 
+enemy2_down_sound = pygame.mixer.Sound('resources/sound/enemy2_down.wav')
+enemy2_down_sound.set_volume(0.3)
+enemy2_rect = pygame.Rect(0, 0, 69, 99)
+enemy2_img = plane_img.subsurface(enemy2_rect)
+enemy2_down_imgs = []
+enemy2_down_imgs.append(plane_img.subsurface(pygame.Rect(534, 655, 69, 95)))
+enemy2_down_imgs.append(plane_img.subsurface(pygame.Rect(603, 655, 69, 95)))
+enemy2_down_imgs.append(plane_img.subsurface(pygame.Rect(672, 653, 69, 95)))
+enemy2_down_imgs.append(plane_img.subsurface(pygame.Rect(741, 653, 69, 95)))
+
 enemies1 = pygame.sprite.Group()
+enemies2 = pygame.sprite.Group()
 enemies3 = pygame.sprite.Group()
 
 enemies_down = pygame.sprite.Group()
+enemies_down2 = pygame.sprite.Group()
+enemies_down3 = pygame.sprite.Group()
 
 shoot_frequency = 0
 enemy_frequency = 0
@@ -107,6 +119,8 @@ def main():
     global shoot_frequency
     global enemy_frequency
     global enemies_down
+    global enemies_down2
+    global enemies_down3
     global player_down_index
     global score
     global t
@@ -114,7 +128,6 @@ def main():
     while running:
 
         clock.tick(45)
-
 
         if not player.is_hit:
             if shoot_frequency % 15 == 0:
@@ -128,10 +141,14 @@ def main():
             enemy1_pos = [random.randint(0, SCREEN_WIDTH - enemy1_rect.width), 0]
             enemy1 = Enemy(enemy1_img, enemy1_down_imgs, enemy1_pos)
             enemies1.add(enemy1)
-        if enemy_frequency % (t+50) == 0:
-            enemy3_pos = [random.randint(0, SCREEN_WIDTH - enemy1_rect.width), 0]
+        if enemy_frequency == 190:
+            enemy3_pos = [random.randint(0, SCREEN_WIDTH - enemy3_rect.width), 0]
             enemy3 = Enemy(enemy3_img, enemy3_down_imgs, enemy3_pos)
-            enemies1.add(enemy3)
+            enemies3.add(enemy3)
+        if enemy_frequency % (t+30) == 0:
+            enemy2_pos = [random.randint(0, SCREEN_WIDTH - enemy2_rect.width), 0]
+            enemy2 = Enemy(enemy2_img, enemy2_down_imgs, enemy2_pos)
+            enemies2.add(enemy2)
         enemy_frequency += 1
         if pygame.time.get_ticks() / 5000 > 0:
             if t  >= 20:
@@ -150,7 +167,6 @@ def main():
 
         for enemy in enemies1:
             enemy.move()
-
             if pygame.sprite.collide_circle(enemy, player):
                 enemies_down.add(enemy)
                 enemies1.remove(enemy)
@@ -159,23 +175,40 @@ def main():
                 break
             if enemy.rect.top > SCREEN_HEIGHT:
                 enemies1.remove(enemy)
+
+        for enemy in enemies2:
+            enemy.move()
+            if pygame.sprite.collide_circle(enemy, player):
+                enemies_down2.add(enemy)
+                enemies2.remove(enemy)
+                player.is_hit = True
+                game_over_sound.play()
+                break
+            if enemy.rect.top > SCREEN_HEIGHT:
+                enemies2.remove(enemy)
 
         for enemy in enemies3:
             enemy.move()
             if pygame.sprite.collide_circle(enemy, player):
-                enemies_down.add(enemy)
-                enemies1.remove(enemy)
+                enemies_down3.add(enemy)
+                enemies3.remove(enemy)
                 player.is_hit = True
                 game_over_sound.play()
                 break
             if enemy.rect.top > SCREEN_HEIGHT:
-                enemies1.remove(enemy)
+                enemies3.remove(enemy)
 
 
 
         enemies1_down = pygame.sprite.groupcollide(enemies1, player.bullets, 1, 1)
+        enemies2_down = pygame.sprite.groupcollide(enemies2, player.bullets, 1, 1)
+        enemies3_down = pygame.sprite.groupcollide(enemies3, player.bullets, 1, 1)
         for enemy_down in enemies1_down:
             enemies_down.add(enemy_down)
+        for enemy_down in enemies2_down:
+            enemies_down2.add(enemy_down)
+        for enemy_down in enemies3_down:
+            enemies_down3.add(enemy_down)   
 
         screen.fill(0)
         screen.blit(background, (0, 0))
@@ -191,8 +224,6 @@ def main():
             if player_down_index > 47:
                 running = False
 
-
-
         for enemy_down in enemies_down:
             if enemy_down.down_index == 0:
                 enemy1_down_sound.play()
@@ -203,10 +234,31 @@ def main():
             screen.blit(enemy_down.down_imgs[enemy_down.down_index // 2], enemy_down.rect)
             enemy_down.down_index += 1
 
+        for enemy_down in enemies_down2:
+            if enemy_down.down_index == 0:
+                enemy2_down_sound.play()
+            if enemy_down.down_index > 9:
+                enemies_down2.remove(enemy_down)
+                score += 2000
+                continue
+            screen.blit(enemy_down.down_imgs[enemy_down.down_index // 5], enemy_down.rect)
+            enemy_down.down_index += 1
+
+        for enemy_down in enemies_down3:
+            if enemy_down.down_index == 0:
+                enemy3_down_sound.play()
+            if enemy_down.down_index > 13:
+                enemies_down3.remove(enemy_down)
+                score += 3000
+                continue
+            screen.blit(enemy_down.down_imgs[enemy_down.down_index // 6], enemy_down.rect)
+            enemy_down.down_index += 1
+
 
         player.bullets.draw(screen)
         enemies1.draw(screen)
-
+        enemies2.draw(screen)
+        enemies3.draw(screen)
 
         score_font = pygame.font.Font(None, 36)
         score_text = score_font.render(str(score), True, (128, 128, 128))
